@@ -22,10 +22,7 @@ app.post("/api/services", (req, res) => {
   //input validator
   const { error } = validateService(req.body);
 
-  if (error) {
-    res.status(400).send(error.details[0].message);
-    return;
-  }
+  if (error) return res.status(400).send(error.details[0].message);
 
   const service = {
     id: services.length + 1,
@@ -42,7 +39,9 @@ app.get("/api/services/:id", (req, res) => {
   );
 
   if (!service)
-    res.status(404).send("The service you are looking for was not found");
+    return res
+      .status(404)
+      .send("The service you are looking for was not found");
   res.send(service);
 });
 
@@ -54,21 +53,40 @@ app.put("/api/services/:id", (req, res) => {
   );
 
   if (!service)
-    res.status(404).send("The service you are looking for was not found");
+    return res
+      .status(404)
+      .send("The service you are looking for was not found");
 
   //Validate
   //If invalid, return 400 - Bad Request
 
   const { error } = validateService(req.body);
 
-  if (error) {
-    res.status(400).send(error.details[0].message);
-    return;
-  }
+  if (error) return res.status(400).send(error.details[0].message);
 
   //Update service
   service.name = req.body.name;
   //Return the updated service
+  res.send(service);
+});
+
+app.delete("/api/services/:id", (req, res) => {
+  //Look up the service
+  //Not existing, return 404
+  const service = services.find(
+    service => service.id === parseInt(req.params.id)
+  );
+
+  if (!service)
+    return res
+      .status(404)
+      .send("The service you are looking for was not found");
+
+  //Delete
+  const index = services.indexOf(service);
+  services.splice(index, 1);
+
+  //Return the same course
   res.send(service);
 });
 

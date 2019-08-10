@@ -20,13 +20,12 @@ app.get("/api/services", (req, res) => {
 
 app.post("/api/services", (req, res) => {
   //input validator
-  const schema = {
-    name: Joi.string()
-      .min(3)
-      .required()
-  };
+  const { error } = validateService(req.body);
 
-  Joi.validate(req.body, schema);
+  if (error) {
+    res.status(400).send(error.details[0].message);
+    return;
+  }
 
   const service = {
     id: services.length + 1,
@@ -46,6 +45,42 @@ app.get("/api/services/:id", (req, res) => {
     res.status(404).send("The service you are looking for was not found");
   res.send(service);
 });
+
+app.put("/api/services/:id", (req, res) => {
+  //Look up the service
+  //If not existing, return 404
+  const service = services.find(
+    service => service.id === parseInt(req.params.id)
+  );
+
+  if (!service)
+    res.status(404).send("The service you are looking for was not found");
+
+  //Validate
+  //If invalid, return 400 - Bad Request
+
+  const { error } = validateService(req.body);
+
+  if (error) {
+    res.status(400).send(error.details[0].message);
+    return;
+  }
+
+  //Update service
+  service.name = req.body.name;
+  //Return the updated service
+  res.send(service);
+});
+
+const validateService = service => {
+  const schema = {
+    name: Joi.string()
+      .min(3)
+      .required()
+  };
+
+  return Joi.validate(service, schema);
+};
 
 const port = process.env.PORT || 3000;
 app.listen(port, () => {
